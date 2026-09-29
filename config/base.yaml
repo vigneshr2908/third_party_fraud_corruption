@@ -1,0 +1,86 @@
+# =============================================================================
+# Base configuration - Third-Party Fraud & Corruption Network Detection
+# -----------------------------------------------------------------------------
+# EVERY threshold, weight, rate and parameter used anywhere in this project lives
+# in config/. Nothing is hard-coded in src/. This is a model-risk requirement:
+# an independent validator must be able to read the parameters without reading
+# the code, and a parameter change must show as a config diff in version control.
+#
+# This file is the A1 baseline. Later phases add their own file alongside it:
+#   A6  config/entity_resolution.yaml
+#   A8  config/rules.yaml
+#   A12 config/scoring.yaml
+# settings.py discovers whatever is present, so adding one needs no code change.
+# =============================================================================
+
+project:
+  name: "Third-Party Fraud & Corruption Network Detection"
+  short_name: "apnd"
+  model_id: "APND-001"            # model inventory reference
+  model_version: "0.1.0"          # bumped on any change that alters output
+  owner_function: "Risk & Compliance Analytics (2nd Line of Defence)"
+  methodology_owner: "AB&C / Financial Crime Compliance"
+  validator: "Model Risk Management"
+  jurisdiction: "United Kingdom"
+  regulatory_anchors:
+    - "Bribery Act 2010 s.7 / s.8"
+    - "ECCTA 2023 - failure to prevent fraud (in force 01-09-2025)"
+    - "MoJ Adequate Procedures guidance"
+    - "PRA SS1/23 - model risk management"
+
+run:
+  # Master switch for dataset size. 0.1 = 10% of source scale, 1.0 = full.
+  scale: 0.1
+  # Every stochastic step derives from this. Recorded in the run manifest.
+  random_seed: 20260929
+  environment: "development"      # development | validation | production
+  strict_mode: true               # fail fast on schema breach rather than warn
+
+paths:
+  # Relative to the repository root. Nothing under data/ or outputs/ is committed.
+  data_raw: "data/raw"
+  data_interim: "data/interim"
+  data_processed: "data/processed"
+  data_external: "data/external"
+  outputs: "outputs"
+  manifests: "outputs/manifests"
+  figures: "outputs/figures"
+  reports: "outputs/reports"
+
+data:
+  # Source row counts from the supplied metadata profiles. Scaled targets in A2
+  # derive from these, so they live here rather than in the generator.
+  source_row_counts:
+    psr_master: 87166
+    engagement: 45516
+    irq: 37439
+  # Dimension domains at or below this size are never scaled down: a region does
+  # not become a third of a region in a 10% sample.
+  domain_keep_threshold: 50
+  file_format: "parquet"
+  parquet_compression: "snappy"
+
+neo4j:
+  # Credentials NEVER live here. They come from environment variables.
+  # See .env.example. This file is committed; .env is not.
+  uri_env_var: "NEO4J_URI"
+  user_env_var: "NEO4J_USER"
+  password_env_var: "NEO4J_PASSWORD"
+  database: "apnd"
+  connection_timeout_seconds: 30
+  max_connection_lifetime_seconds: 3600
+  enabled: true                   # set false to run the pipeline without Neo4j
+
+analysis:
+  # Review capacity drives every "at K" metric. Set from investigator capacity,
+  # not from what makes the numbers look good.
+  alert_capacity_k: 100
+  minutes_per_alert_review: 25
+  expected_base_rate: 0.03        # planning assumption only, never a target
+
+audit:
+  # Written into every run manifest so a validator can reproduce any output.
+  record_git_sha: true
+  record_config_hash: true
+  record_package_versions: true
+  record_input_file_hashes: true

@@ -1,0 +1,60 @@
+# =============================================================================
+# Nothing under data/ or outputs/ is ever committed.
+#
+# Two reasons. First, even synthetic data should not live in a repository that
+# may become public - the habit is what matters, and the day real data is used
+# the habit is already in place. Second, a validator reproduces results from
+# code plus configuration plus seed, not from a committed copy of the answer.
+# =============================================================================
+
+# Exclude contents but keep the directory placeholders, so a fresh clone has the
+# same tree shape. Git cannot re-include a file whose parent directory is
+# excluded, hence the three-line pattern rather than a simple 'data/**'.
+data/**/*
+!data/**/
+!data/**/.gitkeep
+outputs/**/*
+!outputs/**/
+!outputs/.gitkeep
+
+# Secrets - never committed
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# Testing and tooling
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# Notebooks - checkpoints only; notebooks themselves are committed for EDA
+.ipynb_checkpoints/
+
+# Neo4j local
+neo4j/
+*.dump
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
